@@ -6,6 +6,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Goutte\Client;
+use RedBeanPHP\R;
 
 class CrawlCommand extends Command
 {
@@ -32,15 +33,13 @@ class CrawlCommand extends Command
         $url = $input->getArgument('url');
         if ($url) {
         	$client = new Client();
-
             $crawler = $client->request('GET', $url);
-            // dump($crawler);
         } 
+
         if ($input->getOption('posts')) {
         	switch ($input->getOption('posts')) {
         		case 'misykona':
         			//load crawling rules for misykona
-        			// $class ="isotopeElement post_format_standard odd isotopeElementShow";
         			$class['posts'] ="article h4 a";
         			$class['post'] ="div.post_text_area";
         			break;
@@ -51,8 +50,19 @@ class CrawlCommand extends Command
         	}
            $posts = $this->crawlPosts($crawler, $client, $class);
         }
-        dump($posts);
-        // $output->writeln($text);
+      	foreach ($posts as $post) {
+
+      		$status = $this->savePost($post);
+      		dump($status);die;
+      		if(!$status)
+      			$errors[] = $post['title'].' - not saved';
+      	}
+      	$response = $this->formatResponse('Scaping Done!');
+      	if(!empty($errors)){
+      		$response = $this->formatResponse(join("\n", $errors), false);
+      	}
+
+        $output->writeln($response);
     }
 
     public function crawlPosts(\Symfony\Component\DomCrawler\Crawler $crawler, \Goutte\Client $client, $class)
@@ -63,9 +73,7 @@ class CrawlCommand extends Command
     	
 		    $posts[$count]['title'] = $node->text();
 		    $posts[$count]['link'] = $node->attr('href');
-		    // $posts[$count]['content'] = $client->click($crawler->selectLink($node->text())->link());
-		    // $node->attr('href');
-		 
+	
 		    $count ++;
 		});
 
@@ -73,10 +81,8 @@ class CrawlCommand extends Command
 		
 			$page_obj = $client->request('GET', $posts[$key]['link']);
 			$posts[$key]['content'] = $page_obj->filter($class['post'])->text();
-			dump($posts[$key]);exit;
 
 		}
-
 
 		return $posts;
     }
@@ -86,8 +92,28 @@ class CrawlCommand extends Command
     	
     }
 
-    public function savePost($posts = []);
+    private function savePost($post = [])
     {
-    	# code...
+
+    	if(!empty($post)){
+    		$post = R::dispense('posts');
+    		$post->title = $post['title'];
+    		$post->link = $post['link'];
+    		$post->content = $post['content'];
+    		$save = R::store($post);
+    		if(is_int($save) && $save != 0)
+    			return true;
+    	}
+    	return false;
+    }
+
+    public function formatResponse($response, $status = true)
+    {
+    	$resp = "<info>".$response."</info>";
+    	if(!$status)
+    		$resp = "<error>".$response."</error>";
+
+    	return $resp;
+
     }
 }
