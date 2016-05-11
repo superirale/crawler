@@ -53,7 +53,7 @@ class CrawlCommand extends Command
       	foreach ($posts as $post) {
 
       		$status = $this->savePost($post);
-      		dump($status);die;
+      		
       		if(!$status)
       			$errors[] = $post['title'].' - not saved';
       	}
@@ -78,7 +78,6 @@ class CrawlCommand extends Command
 		});
 
 		foreach ($posts as $key => $value) {
-		
 			$page_obj = $client->request('GET', $posts[$key]['link']);
 			$posts[$key]['content'] = $page_obj->filter($class['post'])->text();
 
@@ -87,20 +86,23 @@ class CrawlCommand extends Command
 		return $posts;
     }
 
-    private function crawl(\Goutte\Client $client)
+    private function crawlPaginatedLinks(\Goutte\Client $client)
     {
     	
     }
 
-    private function savePost($post = [])
+    private function savePost($post_data = [])
     {
+        $post_data = (new \GUMP())->sanitize($post_data);
+        
 
-    	if(!empty($post)){
+    	if(!empty($post_data)){
     		$post = R::dispense('posts');
-    		$post->title = $post['title'];
-    		$post->link = $post['link'];
-    		$post->content = $post['content'];
+    		$post->title = $post_data['title'];
+    		$post->link = $post_data['link'];
+    		$post->content = $post_data['content'];
     		$save = R::store($post);
+          
     		if(is_int($save) && $save != 0)
     			return true;
     	}

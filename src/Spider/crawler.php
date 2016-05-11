@@ -1,6 +1,7 @@
 <?php namespace Superirale\Spider;
 
 use Goutte\Client;
+use \Gump;
 
 class Crawler
 {
