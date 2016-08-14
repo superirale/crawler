@@ -1,2 +1,5 @@
 vendor
 .env
+src/Spider/Console/Commands/GreetCommand.php
+src/Spider/Console/Commands/PredictorCommand.php
+src/Spider/Console/simplecrawler.php

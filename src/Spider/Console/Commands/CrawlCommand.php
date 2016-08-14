@@ -71,7 +71,7 @@ class CrawlCommand extends Command
     	$count = 0;
     	$crawler->filter($class['posts'])->each(function ($node) use (&$posts, &$count, $crawler, $client) {
     	
-		    $posts[$count]['title'] = $node->text();
+		    $posts[$count]['title']  $node->text();
 		    $posts[$count]['link'] = $node->attr('href');
 	
 		    $count ++;
@@ -95,7 +95,6 @@ class CrawlCommand extends Command
     {
         $post_data = (new \GUMP())->sanitize($post_data);
         
-
     	if(!empty($post_data)){
     		$post = R::dispense('posts');
     		$post->title = $post_data['title'];
